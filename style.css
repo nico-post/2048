@@ -1,0 +1,47 @@
+body {
+    font-family: Arial, sans-serif;
+    text-align: center;
+    background-color: #f4f4f4;
+}
+
+h1 {
+    color: #333;
+}
+
+p {
+    color: #666;
+}
+
+#game-board {
+    display: grid;
+    margin: 20px auto;
+    border: 2px solid #333;
+    background-color: #ccc;
+    grid-template-columns: repeat(4, 100px);
+    grid-gap: 10px;
+}
+
+.tile {
+    width: 100px;
+    height: 100px;
+    background-color: #eee;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 24px;
+    font-weight: bold;
+    color: #333;
+    border-radius: 8px;
+}
+
+.tile[data-value="2"] { background-color: #fcefe6; }
+.tile[data-value="4"] { background-color: #f9dfc7; }
+.tile[data-value="8"] { background-color: #f8b88b; color: #fff; }
+.tile[data-value="16"] { background-color: #f87c5f; color: #fff; }
+.tile[data-value="32"] { background-color: #f85e3b; color: #fff; }
+.tile[data-value="64"] { background-color: #f8411e; color: #fff; }
+.tile[data-value="128"] { background-color: #e6da7a; color: #fff; }
+.tile[data-value="256"] { background-color: #e6d576; color: #fff; }
+.tile[data-value="512"] { background-color: #e6cf70; color: #fff; }
+.tile[data-value="1024"] { background-color: #e6c960; color: #fff; }
+.tile[data-value="2048"] { background-color: #e6c24b; color: #fff; }
