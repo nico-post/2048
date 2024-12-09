@@ -8,7 +8,7 @@
     height: 400px;                        /* Total grid height */
     background-color: #ccc;
     padding: 10px;
-    justify-content: center;
+
 
   }
   
@@ -21,7 +21,8 @@
     font-size: 20px;
     font-weight: bold;
     border-radius: 5px;
+
   }
   body {
-    background-color: orange;
+    background-color: aquamarine;
   } 
