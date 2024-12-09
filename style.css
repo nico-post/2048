@@ -1,0 +1,22 @@
+.grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr); /* 4 equal columns */
+    grid-template-rows: repeat(4, 1fr);   /* 4 equal rows */
+    gap: 10px;                            /* Spacing between cells */
+    width: 400px;                         /* Total grid width */
+    height: 400px;                        /* Total grid height */
+    background-color: #ccc;
+    padding: 10px;
+  }
+  
+  .cell {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #eee;
+    border: 1px solid #bbb;
+    font-size: 20px;
+    font-weight: bold;
+    border-radius: 5px;
+  }
+  
