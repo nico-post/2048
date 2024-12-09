@@ -1,356 +1,155 @@
-// Filename: script.js 
-// Get the game grid 
-const gridItems = [ 
-	...document.querySelectorAll(".grid-item"), 
-]; 
-const score_val = document.querySelector(".score-value"); 
-const result = document.querySelector(".result"); 
-let score = 0; 
-let moves = 0; 
-let moveFactor = 4; 
-let options = [ 
-	2, 4, 8, 2, 4, 8, 2, 2, 4, 4, 2, 8, 2, 2, 4, 4, 2, 
-]; 
-let matrix = []; 
-let prevMatrix; 
+const board = document.getElementById("game-board");
+const scoreDisplay = document.getElementById("score");
+const restartButton = document.getElementById("restart");
 
-let colors = [ 
-	"#caf0f8", 
-	"#90e0ef", 
-	"#00b4d8", 
-	"#0077b6", 
-	"#03045e", 
-	"#023047", 
-	"#fca311", 
-	"#14213d", 
-	"#e63946", 
-	"#ffc300", 
-	"#6a040f", 
-	"#000000", 
-]; 
+const size = 4;
+let grid = [];
+let score = 0;
 
-// Create the starting game grid. 
-let row = []; 
-for (let index = 1; index < gridItems.length + 1; index++) { 
-	if (index % 4 === 0) { 
-		let item = gridItems[index - 1]; 
-		item.firstElementChild.innerText = ""; 
-		row.push(item); 
-		matrix.push(row); 
-		row = []; 
-	} else { 
-		let item = gridItems[index - 1]; 
-		item.firstElementChild.innerText = ""; 
-		row.push(item); 
-	} 
-} 
+// Initialize the grid
+function initializeGrid() {
+  grid = Array(size)
+    .fill(null)
+    .map(() => Array(size).fill(0));
 
-// Assign any two grid blocks the value of 2 
-const rowIdx = Math.floor(Math.random() * 4); 
-const colIdx = Math.floor(Math.random() * 4); 
-let rowIdx2 = Math.floor(Math.random() * 4); 
-let colIdx2 = Math.floor(Math.random() * 4); 
+  spawnNewTile();
+  spawnNewTile();
 
-if (rowIdx === rowIdx2 && colIdx === colIdx2) { 
-	rowIdx2 = Math.floor(Math.random() * 4); 
-	colIdx2 = Math.floor(Math.random() * 4); 
-} 
+  updateBoard();
+}
 
-matrix[rowIdx][colIdx].firstElementChild.textContent = 2; 
-matrix[rowIdx2][colIdx2].firstElementChild.textContent = 2; 
+// Spawn a new tile (2 or 4)
+function spawnNewTile() {
+  let emptyCells = [];
+  for (let row = 0; row < size; row++) {
+    for (let col = 0; col < size; col++) {
+      if (grid[row][col] === 0) emptyCells.push({ row, col });
+    }
+  }
+  if (emptyCells.length === 0) return;
 
-let availIndexes = updateAvailIndexes(); 
+  const { row, col } = emptyCells[Math.floor(Math.random() * emptyCells.length)];
+  grid[row][col] = Math.random() < 0.9 ? 2 : 4;
+}
 
-updateColors(); 
+// Update the board
+function updateBoard() {
+  board.innerHTML = "";
+  grid.forEach((row) => {
+    row.forEach((value) => {
+      const cell = document.createElement("div");
+      cell.classList.add("cell");
+      if (value !== 0) {
+        cell.textContent = value;
+        cell.setAttribute("data-value", value);
+      }
+      board.appendChild(cell);
+    });
+  });
 
-// Make web page able to listen to keydown event 
-document.addEventListener("keydown", moveBlocks); 
+  scoreDisplay.textContent = `Score: ${score}`;
+}
 
-// Method to extract columns from an 2D array. 
-const arrayColumn = (arr, n) => arr.map((x) => x[n]); 
+// Handle moves
+function slide(row) {
+  let newRow = row.filter((value) => value !== 0);
+  for (let i = 0; i < newRow.length - 1; i++) {
+    if (newRow[i] === newRow[i + 1]) {
+      newRow[i] *= 2;
+      score += newRow[i];
+      newRow[i + 1] = 0;
+    }
+  }
+  newRow = newRow.filter((value) => value !== 0);
+  while (newRow.length < size) newRow.push(0);
+  return newRow;
+}
 
-function moveBlocks(e) { 
-	if ( 
-		e.key !== "ArrowLeft" && 
-		e.key !== "ArrowRight" && 
-		e.key !== "ArrowUp" && 
-		e.key !== "ArrowDown"
-	) { 
-		return; 
-	} 
+function move(direction) {
+  let rotated = false;
+  if (direction === "up" || direction === "down") {
+    grid = rotateGrid(grid);
+    rotated = true;
+  }
+  if (direction === "down" || direction === "right") {
+    grid = grid.map((row) => row.reverse());
+  }
 
-	moves++; 
-	matrixVals = getCurrentMatrixValues(); 
-	prevMatrix = matrixVals; 
+  let moved = false;
+  grid = grid.map((row) => {
+    const newRow = slide(row);
+    if (JSON.stringify(row) !== JSON.stringify(newRow)) moved = true;
+    return newRow;
+  });
 
-	let col1 = arrayColumn(matrix, 0); 
-	let col2 = arrayColumn(matrix, 1); 
-	let col3 = arrayColumn(matrix, 2); 
-	let col4 = arrayColumn(matrix, 3); 
-	let row1 = matrix[0]; 
-	let row2 = matrix[1]; 
-	let row3 = matrix[2]; 
-	let row4 = matrix[3]; 
+  if (direction === "down" || direction === "right") {
+    grid = grid.map((row) => row.reverse());
+  }
+  if (rotated) {
+    grid = rotateGrid(grid, true);
+  }
 
-	if (e.key === "ArrowLeft") { 
-		moveLeft(row1); 
-		moveLeft(row2); 
-		moveLeft(row3); 
-		moveLeft(row4); 
-	} 
-	if (e.key === "ArrowRight") { 
-		moveRight(row1); 
-		moveRight(row2); 
-		moveRight(row3); 
-		moveRight(row4); 
-	} 
-	if (e.key === "ArrowUp") { 
-		moveLeft(col1); 
-		moveLeft(col2); 
-		moveLeft(col3); 
-		moveLeft(col4); 
-	} 
-	if (e.key === "ArrowDown") { 
-		moveRight(col1); 
-		moveRight(col2); 
-		moveRight(col3); 
-		moveRight(col4); 
-	} 
+  if (moved) {
+    spawnNewTile();
+    updateBoard();
+    if (isGameOver()) {
+      alert("Game Over!");
+    }
+  }
+}
 
-	matrixVals = getCurrentMatrixValues(); 
-	availIndexes = updateAvailIndexes(); 
-	updateColors(); 
+// Rotate the grid for vertical moves
+function rotateGrid(grid, counterclockwise = false) {
+  const newGrid = Array(size)
+    .fill(null)
+    .map(() => Array(size).fill(0));
+  for (let row = 0; row < size; row++) {
+    for (let col = 0; col < size; col++) {
+      if (counterclockwise) {
+        newGrid[row][col] = grid[col][size - 1 - row];
+      } else {
+        newGrid[row][col] = grid[size - 1 - col][row];
+      }
+    }
+  }
+  return newGrid;
+}
 
-	let check = checkMatrixEquality(prevMatrix, matrixVals); 
+// Check if the game is over
+function isGameOver() {
+  for (let row = 0; row < size; row++) {
+    for (let col = 0; col < size; col++) {
+      if (grid[row][col] === 0) return false;
+      if (
+        (col < size - 1 && grid[row][col] === grid[row][col + 1]) ||
+        (row < size - 1 && grid[row][col] === grid[row + 1][col])
+      )
+        return false;
+    }
+  }
+  return true;
+}
 
-	if (availIndexes.length === 0 && check === true) { 
-		gameOver("loose"); 
-	} 
+// Handle key presses
+document.addEventListener("keydown", (e) => {
+  switch (e.key) {
+    case "ArrowUp":
+      move("up");
+      break;
+    case "ArrowDown":
+      move("down");
+      break;
+    case "ArrowLeft":
+      move("left");
+      break;
+    case "ArrowRight":
+      move("right");
+      break;
+  }
+});
 
-	if (moves % moveFactor === 0) { 
-		generateNewBlock(); 
-	} 
-} 
+// Restart the game
+restartButton.addEventListener("click", initializeGrid);
 
-setInterval(() => { 
-	availIndexes = updateAvailIndexes(); 
-	generateNewBlock(); 
-}, 8000); 
-
-setTimeout(() => { 
-	options.push(16); 
-	setTimeout(() => { 
-		options.push(16); 
-		options.push(32); 
-		setTimeout(() => { 
-			options.push(16); 
-			options.push(32); 
-			options.push(64); 
-		}, 40000); 
-	}, 18000); 
-}, 120000); 
-
-function getCurrentMatrixValues() { 
-	let gridItems = [ 
-		...document.querySelectorAll(".grid-item"), 
-	]; 
-	let matrix_grid = []; 
-	let row = []; 
-	for ( 
-		let index = 1; 
-		index < gridItems.length + 1; 
-		index++ 
-	) { 
-		if (index % 4 === 0) { 
-			let item = gridItems[index - 1]; 
-			row.push(item.firstElementChild.innerText); 
-			matrix_grid.push(row); 
-			row = []; 
-		} else { 
-			let item = gridItems[index - 1]; 
-			row.push(item.firstElementChild.innerText); 
-		} 
-	} 
-	return matrix_grid; 
-} 
-
-function shiftLeft(arr) { 
-	for (let i = 0; i < 4; i++) { 
-		for (let i = 1; i < 4; i++) { 
-			let currElement = arr[i].firstElementChild; 
-			let prevElement = arr[i - 1].firstElementChild; 
-			if (prevElement.innerText == 0) { 
-				prevElement.innerText = 
-					currElement.innerText; 
-				currElement.innerText = ""; 
-			} 
-		} 
-	} 
-} 
-
-function shiftRight(arr) { 
-	for (let i = 0; i < 4; i++) { 
-		for (let i = 2; i >= 0; i--) { 
-			let currElement = arr[i].firstElementChild; 
-			let nextElement = arr[i + 1].firstElementChild; 
-			if (nextElement.innerText == 0) { 
-				nextElement.innerText = 
-					currElement.innerText; 
-				currElement.innerText = ""; 
-			} 
-		} 
-	} 
-} 
-
-function moveRight(row) { 
-	shiftRight(row); 
-
-	for (let i = 2; i >= 0; i--) { 
-		let currElement = row[i].firstElementChild; 
-		let nextElement = row[i + 1].firstElementChild; 
-		let val = parseInt(currElement.innerText); 
-		let nextVal = parseInt(nextElement.innerText); 
-		if (val === nextVal && val !== 0) { 
-			let newVal = val + nextVal; 
-			nextElement.innerText = newVal; 
-			currElement.innerText = ""; 
-			score = score + 2; 
-			score_val.innerText = score; 
-			if (newVal === 2048) { 
-				gameOver("Win"); 
-			} 
-		} 
-	} 
-
-	shiftRight(row); 
-} 
-
-function moveLeft(row) { 
-	shiftLeft(row); 
-
-	for (let i = 1; i < 4; i++) { 
-		let currElement = row[i].firstElementChild; 
-		let prevElement = row[i - 1].firstElementChild; 
-		let val = parseInt(currElement.innerText); 
-		let prevVal = parseInt(prevElement.innerText); 
-		if (val === prevVal && val !== 0) { 
-			let newVal = val + prevVal; 
-			prevElement.innerText = newVal; 
-			currElement.innerText = ""; 
-			score = score + 2; 
-			score_val.innerText = score; 
-			if (newVal === 2048) { 
-				gameOver("Win"); 
-			} 
-		} 
-	} 
-
-	shiftLeft(row); 
-} 
-
-function updateAvailIndexes() { 
-	matrixValues = getCurrentMatrixValues(); 
-	let grid = []; 
-	for (let i = 0; i < 4; i++) { 
-		for (let j = 0; j < 4; j++) { 
-			if (matrixValues[i][j] == "") { 
-				grid.push([i, j]); 
-			} 
-		} 
-	} 
-	return grid; 
-} 
-
-function generateNewBlock() { 
-	if (availIndexes.length !== 0) { 
-		let randInt = Math.floor( 
-			Math.random() * availIndexes.length 
-		); 
-		let coords = availIndexes[randInt]; 
-		let randInt3 = Math.floor( 
-			Math.random() * options.length 
-		); 
-		let ele = 
-			matrix[coords[0]][coords[1]].firstElementChild; 
-		ele.innerText = options[randInt3]; 
-		updateColors(); 
-	} 
-} 
-
-function checkMatrixEquality(mat1, mat2) { 
-	for (let i = 0; i < 4; i++) { 
-		for (let j = 0; j < 4; j++) { 
-			if (mat1[i][j] !== mat2[i][j]) { 
-				return false; 
-			} 
-		} 
-	} 
-	return true; 
-} 
-
-function gameOver(status) { 
-	if (status === "Win") { 
-		result.innerText = "You Won!!!"; 
-		result.style.color = "rgb(78, 236, 144)"; 
-	} else { 
-		result.innerText = "You Loose!!!"; 
-		result.style.color = "rgb(252, 51, 51)"; 
-	} 
-} 
-
-function updateColors() { 
-	for (let i = 0; i < 4; i++) { 
-		for (let j = 0; j < 4; j++) { 
-			let elem = matrix[i][j].firstElementChild; 
-			if (elem.innerText == 0) { 
-				elem.parentElement.style.backgroundColor = 
-					colors[0]; 
-				elem.style.color = "black"; 
-			} else if (elem.innerText == 2) { 
-				elem.style.color = "black"; 
-				elem.parentElement.style.backgroundColor = 
-					colors[1]; 
-			} else if (elem.innerText == 4) { 
-				elem.style.color = "black"; 
-				elem.parentElement.style.backgroundColor = 
-					colors[2]; 
-			} else if (elem.innerText == 8) { 
-				elem.style.color = "black"; 
-				elem.parentElement.style.backgroundColor = 
-					colors[3]; 
-			} else if (elem.innerText == 16) { 
-				elem.style.color = "white"; 
-				elem.parentElement.style.backgroundColor = 
-					colors[4]; 
-			} else if (elem.innerText == 32) { 
-				elem.style.color = "white"; 
-				elem.parentElement.style.backgroundColor = 
-					colors[5]; 
-			} else if (elem.innerText == 64) { 
-				elem.style.color = "white"; 
-				elem.parentElement.style.backgroundColor = 
-					colors[6]; 
-			} else if (elem.innerText == 128) { 
-				elem.style.color = "white"; 
-				elem.parentElement.style.backgroundColor = 
-					colors[7]; 
-			} else if (elem.innerText == 256) { 
-				elem.style.color = "white"; 
-				elem.parentElement.style.backgroundColor = 
-					colors[8]; 
-			} else if (elem.innerText == 512) { 
-				elem.style.color = "white"; 
-				elem.parentElement.style.backgroundColor = 
-					colors[9]; 
-			} else if (elem.innerText == 1024) { 
-				elem.style.color = "white"; 
-				elem.parentElement.style.backgroundColor = 
-					colors[10]; 
-			} else if (elem.innerText == 2048) { 
-				elem.style.color = "white"; 
-				elem.parentElement.style.backgroundColor = 
-					colors[11]; 
-			} 
-		} 
-	} 
-} 
+// Start the game
+initializeGrid();
