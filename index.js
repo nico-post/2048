@@ -1,22 +1,33 @@
-let grid = [
-    [0,1,2,3]
-    [4,5,6,7]
-    [8,9,10,11]
-    [12,13,14,15]
+// nico block of code
+let gridValues = [
+    [0,1,2,3],
+    [4,5,6,7],
+    [8,9,10,11],
+    [12,13,14,15],
 ]
-let cell00 = 0
-let cell01 = 0
-let cell02 = 0
-let cell03 = 0
-let cell10 = 0
-let cell11 = 0
-let cell12 = 0
-let cell13 = 0
-let cell20 = 0]
-let cell21 = 0
-let cell22 = 0
-let cell23 = 0
-let cell30 = 0
-let cell31 = 0
-let cell32 = 0
-let cell33 = 0
+let gridElements = []
+let grid = document.getElementById("grid")
+let i = 0
+for(let row = 0; row < 4; row++){
+    gridElements.push([])
+    for (let col = 0; col < 4; col++){
+        gridElements[row][col] = grid.children[i]
+        i++
+    }
+}
+
+function updateValues(){
+    for(let row = 0; row<4; row++){
+       for(let col = 0; col<4; col++)
+        gridValues = gridElements[row][col]
+       }
+}
+
+
+
+
+console.log(gridElements)
+// nico and adam code
+
+
+
