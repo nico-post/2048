@@ -38,7 +38,7 @@ function generateRandomTile() {
     }
     if (emptyTiles.length > 0) {
         const { row, col } = emptyTiles[Math.floor(Math.random() * emptyTiles.length)];
-        gridValues[row][col] = Math.random() < 0.9 ? 2048 : 4;
+        gridValues[row][col] = Math.random() < 0.9 ? 2 : 4;
     }
 }
 
