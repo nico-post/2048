@@ -166,8 +166,8 @@ document.addEventListener("keydown", (e) => {
     if (moved) {
         generateRandomTile();
         updateValues();
-        if (checkGameOver()) {
-            alert("Game Over!");
+//        if (checkGameOver()) {
+//            alert("Game Over!");
         }
     }
 });
